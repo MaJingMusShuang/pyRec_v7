@@ -8,10 +8,7 @@ class SocialDataModel(DataModel):
         self.wholeTrustDataSet = []
         self.userIdx_FriendIndicies = {} # {1:[1, 2, 3, 4,...]} {userIdx: friendIndices}
 
-        self.userIdxs_CICT = [] # Cold Item Cold Trust
-        self.userIdxs_CIWT = []
-        self.userIdxs_WICT = []
-        self.userIdxs_WIWT = []
+
 
     def buildDataModel(self, **crossValidation):
         super().buildDataModel(**crossValidation)
@@ -46,6 +43,67 @@ class SocialDataModel(DataModel):
         self.logger.info('num Trusters: ' + str(len(trusterSet)))
         self.logger.info('num Trustees: ' + str(len(trusteeSet)))
         self.logger.info('Density: ' + str(len(self.wholeTrustDataSet) / (self.numUser * self.numUser)))
+
+    def readSocialData(self):
+        self.logger.info('Reading and converting complete social data...')
+        trusterSet = set()
+        trusteeSet = set()
+
+
+        with open(self.socialInputPath) as inputFile:
+            for line in inputFile:
+                thisUserId, thatUserId, trust = line.strip().split(' ')
+                if thisUserId in self.userId_userIdx and thatUserId in self.userId_userIdx:
+                    thisUserIdx = self.userId_userIdx[thisUserId]
+                    thatUserIdx = self.userId_userIdx[thatUserId]
+                    self.wholeTrustDataSet.append([thisUserIdx, thatUserIdx])
+
+                    if thisUserIdx not in self.userIdx_FriendIndicies:
+                        self.userIdx_FriendIndicies[thisUserIdx] = []
+                    self.userIdx_FriendIndicies[thisUserIdx].append(thatUserIdx)
+                    trusterSet.add(thisUserIdx)
+                    trusteeSet.add(thatUserIdx)
+        self.logger.info('num Trust: ' + str(len(self.wholeTrustDataSet)))
+        self.logger.info('num Trusters: ' + str(len(trusterSet)))
+        self.logger.info('num Trustees: ' + str(len(trusteeSet)))
+        self.logger.info('Density: ' + str(len(self.wholeTrustDataSet) / (self.numUser * self.numUser)))
+
+    def pccSimilarity(self):
+        sumPc = 0
+        counter = 0
+        for users in self.wholeTrustDataSet:
+            thisUserIdx, thatUserIdx = users[0], users[1]
+            thisUserItems = self.preferenceMatrix.getItemsOfUser(thisUserIdx)
+            thatUserItems = self.preferenceMatrix.getItemsOfUser(thatUserIdx)
+            commonItems = set(thisUserItems) & set(thatUserItems)
+
+            thisUserRates = []
+            thatUserRates = []
+
+            for itemIdx in commonItems:
+                thisUserRates.append(self.preferenceMatrix.getRating(thisUserIdx, itemIdx))
+                thatUserRates.append(self.preferenceMatrix.getRating(thatUserIdx, itemIdx))
+
+            if len(commonItems)==0:
+                continue
+            counter += 1
+            thisUserMean = sum(thisUserRates) / len(commonItems)
+            thatUserMean = sum(thatUserRates) / len(commonItems)
+
+            sumUp = 0
+            sumDown = 0
+            for thisUserRate, thatUserRate in zip(thisUserRates, thatUserRates):
+                thisUserDiff = thisUserRate - thisUserMean
+                thatUserDiff = thatUserRate - thatUserMean
+                sumUp += thisUserDiff * thatUserDiff
+                sumDown += (thisUserDiff**2) * (thatUserDiff**2)
+            pc = sumUp / sumDown**(1/2) if sumDown>0 else 0
+            sumPc += pc
+
+        avgPc = sumPc / counter
+        self.logger.info('avgPc:{}'.format(avgPc))
+
+
 
 
     def divideUsers(self):

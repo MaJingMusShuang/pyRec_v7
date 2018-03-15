@@ -10,12 +10,10 @@ class DataModel:
         self.dataDirectory = config['dataDirectory']
         self.logger = self.__initLogger()
         self.ratingInputPath = './data' + '/' +self.dataDirectory + '/ratings.txt'
+        self.seed = config.get('seed')
+
         self.userId_userIdx = {}
         self.itemId_itemIdx = {}
-        self.seed = config.get('seed')
-        if self.seed:
-            self.logger.info('************************************************* seed:{}'.format(self.seed))
-
         self.numUser = 0
         self.numItem = 0
         self.trainRatio = config['trainRatio']
@@ -28,7 +26,7 @@ class DataModel:
         self.ratingScaleSet = set()
         self.minRating = 0
         self.maxRating = 0
-        self.trainGlobalMean = 0
+        self.globalMean = 0
         self.binThold_drop = config.get('binThold_drop') #drop ratings less than 4 star
         self.cold_drop = config.get('cold_drop') #drop users or items with less than 5 ratings
         self.binThold = config.get('binThold') #binary threshold
@@ -46,7 +44,10 @@ class DataModel:
         if crossValidation:
             self.splitDataCross(self.config['crossValidation'])
         else:
-            self.splitData()
+            if self.trainRatio>0 and self.trainRatio<1:
+                self.splitData()
+            else:
+                self.logger.info('!!!!!!!splitting data fails, split ratio: {}'.format(self.trainRatio))
         self.logger.info("===========================Data model built successfully!!!============================")
         self.logger.info(str(self))
         self.logger.info("========================================================================================")
@@ -76,7 +77,7 @@ class DataModel:
         self.numItem = self.preferenceMatrix.numItem
         self.minRating = min(self.ratingScaleSet)
         self.maxRating = max(self.ratingScaleSet)
-        self.trainGlobalMean = self.preferenceMatrix.globalMean
+        self.globalMean = self.preferenceMatrix.globalMean
 
         if self.binThold:
                 self.preferenceMatrix.binarize(self.binThold)
@@ -89,6 +90,7 @@ class DataModel:
         self.logger.info('Rating Matrix density: ' + str(self.preferenceMatrix.getDensity()))
         self.logger.info('MaxRating: '+ str(self.maxRating))
         self.logger.info('MinRating: ' + str(self.minRating))
+        self.logger.info('Global Mean: ' + str(self.globalMean))
         
     def readRatingsGtThold(self):
         self.logger.info('Reading rating dataset:{}'.format(self.dataDirectory))
@@ -292,9 +294,10 @@ class DataModel:
         return logger
 
     def __str__(self):
+        if self.seed:
+            self.logger.info('************************************************* seed:{}'.format(self.seed))
         return 'dataset: ' + str(self.dataDirectory) + '\n' \
-                + 'ratingScale: ' + str(self.ratingScaleSet) + '\n' \
-                + 'trainGlobalMean: ' + str(self.trainGlobalMean) + '\n'\
+                + 'ratingScale: ' + str(self.ratingScaleSet) + '\n'
 
 
 

@@ -1,0 +1,10 @@
+[INFO] Reading rating dataset:ciao
+[INFO] loading dataset successfully!!! dataset info
+[INFO] Rating Matrix
+numRatings: 282650
+numUser: 7375
+numItem: 105114
+[INFO] Rating Matrix density: 0.00036460817520799854
+[INFO] MaxRating: 5.0
+[INFO] MinRating: 0.0
+[INFO] Global Mean: 4.160725278613126
