@@ -1,6 +1,8 @@
 import numpy as np
+from scipy.sparse.coo import coo_matrix
+userIdxs, itemIdxs, ratings = [], [], []
 
-class RatingMatrix:
+class RatingMatrix(coo_matrix):
     def __init__(self, batch_size=None):
         self.userItem_rating = {}
         self.user_items = {}
@@ -9,6 +11,7 @@ class RatingMatrix:
         self.numItem = 0
         self.size = 0 #number of none-zero entries
         self.batch_size = batch_size
+
 
     @property
     def userIdxs(self):
@@ -31,6 +34,14 @@ class RatingMatrix:
             self.numItem += 1
         self.item_users[itemIdx].append(userIdx)
         self.size = len(self.userItem_rating)
+
+        # userIdxs, itemIdxs, ratings =[], [], []
+        # for userIdx, itemIdx in self:
+        #     userIdxs.append(userIdx)
+        #     itemIdxs.append(itemIdx)
+        #     ratings.append(rating)
+        # super(RatingMatrix, self).__init__((ratings, (userIdxs, itemIdxs)))
+
 
     def getRating(self, userIdx, itemIdx):
         return self.userItem_rating[userIdx, itemIdx]

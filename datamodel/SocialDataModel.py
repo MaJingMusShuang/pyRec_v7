@@ -68,6 +68,10 @@ class SocialDataModel(DataModel):
         self.logger.info('num Trustees: ' + str(len(trusteeSet)))
         self.logger.info('Density: ' + str(len(self.wholeTrustDataSet) / (self.numUser * self.numUser)))
 
+
+    """
+    Social Recommendation with Missing Not at Random Data
+    """
     def pccSimilarity(self):
         sumPc = 0
         counter = 0
@@ -104,6 +108,89 @@ class SocialDataModel(DataModel):
         self.logger.info('avgPc:{}'.format(avgPc))
 
 
+    def jaccardSimilarity(self):
+        sumSimilarity = 0
+
+        for users in self.wholeTrustDataSet:
+            thisUserIdx, thatUserIdx = users[0], users[1]
+            thisUserItems = self.preferenceMatrix.getItemsOfUser(thisUserIdx)
+            thatUserItems = self.preferenceMatrix.getItemsOfUser(thatUserIdx)
+            commonItems = set(thisUserItems) & set(thatUserItems)
+            allItems = set(thisUserItems) | set(thatUserItems)
+
+            jaccardSim = len(commonItems) / len(allItems) if len(allItems)!=0 else 0
+            sumSimilarity += jaccardSim
+
+        avgJaccardSim = sumSimilarity / len(self.wholeTrustDataSet)
+        self.logger.info('avgJaccardSim:{}'.format(avgJaccardSim))
+
+    def figure2b(self):
+        counter0, sum0 = 0, 0
+        counter1, sum1 = 0, 0
+        counter2, sum2 = 0, 0
+        counter3, sum3 = 0, 0
+        counter4, sum4 = 0, 0
+        counter5, sum5= 0, 0
+        counter6_10, sum6_10 = 0, 0
+        counter11_20, sum11_20 = 0, 0
+        counter_gt20, sum_gt20 = 0, 0
+        for key in self.preferenceMatrix.userItem_rating.keys():
+            numTrustees = 0
+
+            userIdx = key[0]
+            itemIdx = key[1]
+            rating = self.preferenceMatrix.getRating(userIdx, itemIdx)
+
+            friendIdxs = self.getTrustUserIdxs(userIdx)
+            for friendIdx in friendIdxs:
+                friendItemIdxs = self.preferenceMatrix.getItemsOfUser(friendIdx)
+                if itemIdx in friendItemIdxs:
+                    numTrustees += 1
+            if numTrustees == 0:
+                counter0 += 1
+                sum0 += rating
+            elif numTrustees == 1:
+                counter1 += 1
+                sum1 += rating
+            elif numTrustees == 2:
+                counter2 += 2
+                sum2 += rating
+            elif numTrustees == 3:
+                counter3 += 3
+                sum3 += rating
+            elif numTrustees == 4:
+                counter4 += 1
+                sum4 += rating
+            elif numTrustees == 5:
+                counter5 += 1
+                sum5 += rating
+            elif numTrustees>=6 and numTrustees<=10:
+                counter6_10 += 1
+                sum6_10 += rating
+            elif numTrustees>=11 and numTrustees<=20:
+                counter11_20 += 1
+                sum11_20 += rating
+            else:
+                counter_gt20 += 1
+                sum_gt20 += rating
+        avg0 = sum0 / counter0
+        avg1 = sum1 / counter1
+        avg2 = sum2 / counter2
+        avg3 = sum3 / counter3
+        avg4 = sum4 / counter4
+        avg5 = sum5 / counter5
+        avg6_10 = sum6_10 / counter6_10
+        avg_11_20 = sum11_20 / counter11_20
+        avg_gt20 = sum_gt20 / counter_gt20
+        self.logger.info("avg0:{}".format(avg0))
+        self.logger.info("avg1:{}".format(avg1))
+        self.logger.info("avg2:{}".format(avg2))
+        self.logger.info("avg3:{}".format(avg3))
+        self.logger.info("avg4:{}".format(avg4))
+        self.logger.info("avg5:{}".format(avg5))
+        self.logger.info("avg6_10:{}".format(avg6_10))
+        self.logger.info("avg11_20:{}".format(avg_11_20))
+        self.logger.info("avg_gt20:{}".format(avg_gt20))
 
 
     def divideUsers(self):

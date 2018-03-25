@@ -1,11 +1,15 @@
-file = open('trusts.txt')
+import random
+
 lines = []
-for line in file:
-    user1, user2 =line.split(' ')
-    user1 = int(user1)
-    user2 = int(user2)
-    writeLine = '{} {} 1\n'.format(user1, user2)
-    lines.append(writeLine)
-file.close()
-with open('trusts.txt', 'w') as writeFile:
+counter = 0
+while True:
+    user1 = random.randint(a=1, b=7375)
+    user2 = random.randint(a=1, b=7375)
+    if user1==user2:
+        continue
+    lines.append('{} {} 1\n'.format(user1, user2))
+    counter += 1
+    if counter>=111781:
+        break
+with open('randomTrusts.txt', 'w') as writeFile:
     writeFile.writelines(lines)
