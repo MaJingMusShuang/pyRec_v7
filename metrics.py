@@ -10,6 +10,8 @@ if __name__=='__main__':
     dataModel = SocialDataModel(dataConfig)
     dataModel.readRatingData()
     dataModel.readSocialData()
+    dataModel.loadEmbeddings()
+    dataModel.embeddingSim()
     dataModel.pccSimilarity()
     dataModel.jaccardSimilarity()
     # dataModel.figure2b()
